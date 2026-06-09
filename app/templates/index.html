@@ -1,0 +1,116 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="utf-8">
+<title>見積 vs 請求 チェック</title>
+
+<style>
+body { font-family: Arial; margin: 20px; }
+table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
+th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
+th { background-color: #f0f0f0; }
+h3 { margin-top: 30px; }
+</style>
+
+</head>
+
+<body>
+
+<h2>見積 vs 請求 チェック</h2>
+
+<form id="form">
+
+見積1: <input type="file" name="q1"><br>
+請求1: <input type="file" name="i1"><br><br>
+
+見積2: <input type="file" name="q2"><br>
+請求2: <input type="file" name="i2"><br><br>
+
+見積3: <input type="file" name="q3"><br>
+請求3: <input type="file" name="i3"><br><br>
+
+見積4: <input type="file" name="q4"><br>
+請求4: <input type="file" name="i4"><br><br>
+
+見積5: <input type="file" name="q5"><br>
+請求5: <input type="file" name="i5"><br><br>
+
+<button type="submit">一括比較</button>
+
+</form>
+
+<hr>
+
+<div id="result"></div>
+
+<script>
+document.getElementById("form").onsubmit = async (e) => {
+
+    e.preventDefault();
+
+    const formData = new FormData(e.target);
+
+    const res = await fetch("/compare", {
+        method: "POST",
+        body: formData
+    });
+
+    const data = await res.json();
+    console.log(data);
+
+    let html = "<h2>一括比較結果</h2>";
+
+    // ✅ ペアごとに表示
+    data.results.forEach(r => {
+
+        html += `<h3>ペア${r.pair} → ${r.status}</h3>`;
+
+        html += `
+        <table>
+            <tr>
+                <th>品目</th>
+                <th>見積数量</th>
+                <th>請求数量</th>
+                <th>提供単価</th>
+                <th>金額</th>
+                <th>結果</th>
+            </tr>
+        `;
+
+        // ✅ 明細表示（ここが重要）
+        if (r.items && r.items.length > 0) {
+
+            r.items.forEach(item => {
+
+                let mark = item.status === "OK" ? "✅" : "❌";
+
+                html += `
+                <tr>
+                    <td>${item.name || "-"}</td>
+                    <td>${item.q_qty ?? "-"}</td>
+                    <td>${item.i_qty ?? "-"}</td>
+                    <td>${item.q_price ?? "-"}</td>
+                    <td>${item.q_amount ?? "-"}</td>
+                    <td>${mark} ${item.reason || ""}</td>
+                </tr>
+                `;
+            });
+
+        } else {
+
+            html += `
+            <tr>
+                <td colspan="6">明細データなし</td>
+            </tr>
+            `;
+        }
+
+        html += "</table>";
+    });
+
+    document.getElementById("result").innerHTML = html;
+};
+</script>
+
+</body>
+</html>
