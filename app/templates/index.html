@@ -10,6 +10,13 @@ table { border-collapse: collapse; width: 100%; margin-bottom: 20px; }
 th, td { border: 1px solid #ccc; padding: 6px; text-align: center; }
 th { background-color: #f0f0f0; }
 h3 { margin-top: 30px; }
+
+/* ✅ ここ追加 */
+#loading {
+    display: none;
+    font-size: 18px;
+    color: red;
+}
 </style>
 
 </head>
@@ -41,6 +48,9 @@ h3 { margin-top: 30px; }
 
 <hr>
 
+<!-- ✅ ここ追加（resultの上） -->
+<div id="loading">処理中...</div>
+
 <div id="result"></div>
 
 <script>
@@ -50,6 +60,9 @@ document.getElementById("form").onsubmit = async (e) => {
 
     const formData = new FormData(e.target);
 
+    // ✅ ここ追加（開始時ON）
+    document.getElementById("loading").style.display = "block";
+
     const res = await fetch("/compare", {
         method: "POST",
         body: formData
@@ -58,9 +71,11 @@ document.getElementById("form").onsubmit = async (e) => {
     const data = await res.json();
     console.log(data);
 
+    // ✅ ここ追加（終了時OFF）
+    document.getElementById("loading").style.display = "none";
+
     let html = "<h2>一括比較結果</h2>";
 
-    // ✅ ペアごとに表示
     data.results.forEach(r => {
 
         html += `<h3>ペア${r.pair} → ${r.status}</h3>`;
@@ -77,7 +92,6 @@ document.getElementById("form").onsubmit = async (e) => {
             </tr>
         `;
 
-        // ✅ 明細表示（ここが重要）
         if (r.items && r.items.length > 0) {
 
             r.items.forEach(item => {
